@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - '.github/workflows/import-tavo.yml'
+  workflow_dispatch:
 
 jobs:
   import:
