@@ -1,0 +1,30 @@
+name: Fix POS lab scrolling v3
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-scroll-v3-20260828.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Apply document scroll patch
+        run: python .github/scripts/fix_scroll_v3.py
+      - name: Verify CSS
+        run: |
+          grep -F 'overflow-y:scroll' public/index.html
+          grep -F '#app{display:block' public/index.html
+          grep -F '.view{display:block' public/index.html
+      - name: Commit fix
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add public/index.html
+          git diff --cached --quiet && exit 0
+          git commit -m 'fix: use document scrolling across POS lab'
+          git push
