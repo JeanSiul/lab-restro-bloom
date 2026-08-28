@@ -1,0 +1,25 @@
+name: Fix POS lab scrolling
+
+on:
+  push:
+    paths:
+      - '.github/scripts/fix-scroll-20260828.py'
+      - '.github/workflows/fix-scroll-20260828.yml'
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply scroll fix
+        run: python .github/scripts/fix-scroll-20260828.py
+      - name: Commit fix
+        run: |
+          git config user.name 'JeanSiul'
+          git config user.email 'siul.altamirano@gmail.com'
+          git add public/index.html
+          git diff --cached --quiet && exit 0
+          git commit -m 'fix: allow scrolling across POS lab screens'
+          git push origin HEAD:main
