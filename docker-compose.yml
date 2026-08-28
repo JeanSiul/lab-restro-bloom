@@ -1,0 +1,37 @@
+# One command to run the whole stack locally: `docker compose up --build`
+# Then open http://localhost:4242  (logs in with PIN 1234 / 1111 / 3333)
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: platepoint
+      POSTGRES_PASSWORD: platepoint
+      POSTGRES_DB: platepoint
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U platepoint"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  app:
+    build: .
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PORT: 4242
+      DATABASE_URL: postgres://platepoint:platepoint@db:5432/platepoint
+      # CHANGE THIS in any real deployment:
+      JWT_SECRET: change-me-to-a-long-random-string
+      TAX_RATE: "0.0825"
+      # Add your Stripe TEST/LIVE keys to enable real card processing:
+      STRIPE_SECRET_KEY: ""
+      STRIPE_PUBLISHABLE_KEY: ""
+      STRIPE_WEBHOOK_SECRET: ""
+    ports:
+      - "4242:4242"
+
+volumes:
+  pgdata:

@@ -1,0 +1,31 @@
+{
+  "appId": "com.tavo.pos",
+  "appName": "Tavo",
+  "webDir": "www",
+  "backgroundColor": "#0f1115",
+  "server": {
+    "androidScheme": "https",
+    "iosScheme": "https",
+    "allowNavigation": ["app.tavopoint.com", "*.tavopoint.com"]
+  },
+  "ios": {
+    "contentInset": "always",
+    "backgroundColor": "#0f1115",
+    "limitsNavigationsToAppBoundDomains": false
+  },
+  "android": {
+    "backgroundColor": "#0f1115",
+    "allowMixedContent": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1200,
+      "backgroundColor": "#0f1115",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#0f1115"
+    }
+  }
+}

@@ -1,0 +1,38 @@
+// Payment-gateway selector. One interface, many processors.
+// Pick with PAYMENT_GATEWAY=stripe|fiserv|tsys|valor|globalpayments|mock. If unset,
+// auto-detects Stripe (when STRIPE_SECRET_KEY is present) else falls back to mock.
+//
+// Every gateway implements: createCharge(amount, meta), retrieveStatus(id),
+// refund(id, amount), publishableKey(). Add a new processor by dropping a file
+// in this folder and registering it below — no other code changes needed.
+import { makeMockGateway } from './mock.js';
+import { makeStripeGateway } from './stripe.js';
+import { makeFiservGateway } from './fiserv.js';
+import { makeTsysGateway } from './tsys.js';
+import { makeValorGateway } from './valor.js';
+import { makeGlobalPaymentsGateway } from './globalpayments.js';
+
+let _gw = null;
+
+export function getGateway() {
+  if (_gw) return _gw;
+  const choice = (process.env.PAYMENT_GATEWAY || '').toLowerCase();
+  const hasStripe = (process.env.STRIPE_SECRET_KEY || '').startsWith('sk_');
+
+  if (choice === 'stripe' || (!choice && hasStripe)) {
+    _gw = hasStripe ? makeStripeGateway() : makeMockGateway();
+  } else if (choice === 'fiserv') {
+    _gw = makeFiservGateway();
+  } else if (choice === 'tsys') {
+    _gw = makeTsysGateway();
+  } else if (choice === 'valor') {
+    _gw = makeValorGateway();
+  } else if (choice === 'globalpayments' || choice === 'global' || choice === 'gp') {
+    _gw = makeGlobalPaymentsGateway();
+  } else {
+    _gw = makeMockGateway();
+  }
+  return _gw;
+}
+
+export const GATEWAYS = ['stripe', 'fiserv', 'tsys', 'valor', 'globalpayments', 'mock'];

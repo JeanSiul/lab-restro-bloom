@@ -1,0 +1,36 @@
+// Default menu used when seeding an empty database.
+export const MENU_SEED = [
+  ['Starters','Mozzarella Sticks',8.50,'🧀'],
+  ['Starters','Loaded Nachos',11.00,'🌮'],
+  ['Starters','Buffalo Wings',12.50,'🍗'],
+  ['Starters','Garlic Bread',6.00,'🥖'],
+  ['Starters','Soup of the Day',7.50,'🥣'],
+  ['Burgers','Classic Cheeseburger',13.00,'🍔'],
+  ['Burgers','Bacon BBQ Burger',15.50,'🍔'],
+  ['Burgers','Veggie Burger',12.00,'🥬'],
+  ['Burgers','Double Smash',17.00,'🍔'],
+  ['Pizza','Margherita',14.00,'🍕'],
+  ['Pizza','Pepperoni',16.00,'🍕'],
+  ['Pizza','BBQ Chicken',17.50,'🍕'],
+  ['Pizza','Veggie Supreme',16.50,'🍕'],
+  ['Mains','Grilled Salmon',22.00,'🐟'],
+  ['Mains','Ribeye Steak',28.00,'🥩'],
+  ['Mains','Chicken Alfredo',18.00,'🍝'],
+  ['Mains','Fish & Chips',16.00,'🍟'],
+  ['Drinks','Soft Drink',3.00,'🥤'],
+  ['Drinks','Draft Beer',6.50,'🍺'],
+  ['Drinks','House Wine',9.00,'🍷'],
+  ['Drinks','Coffee',3.50,'☕'],
+  ['Drinks','Fresh Juice',5.00,'🧃'],
+  ['Desserts','Cheesecake',8.00,'🍰'],
+  ['Desserts','Chocolate Lava',9.00,'🍫'],
+  ['Desserts','Ice Cream',5.50,'🍨'],
+];
+
+export const STAFF_SEED = [
+  ['Alex Rivera','Manager'],
+  ['Jordan Lee','Server'],
+  ['Sam Patel','Server'],
+  ['Casey Wu','Line Cook'],
+  ['Morgan Diaz','Bartender'],
+];

@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Customer Display · Tavo</title>
+<style>
+  :root{--bg:#0b0d12;--panel:#141821;--panel2:#1b2030;--line:#262c3a;--txt:#eef2f8;--mut:#8b94a7;--brand:#6366f1;--brand2:#a855f7;--green:#34d399;--amber:#fbbf24}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{background:radial-gradient(1200px 600px at 50% -10%,#1a1f33,transparent),var(--bg);color:var(--txt);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;display:flex;flex-direction:column;height:100vh;overflow:hidden;user-select:none}
+  header{display:flex;align-items:center;gap:14px;padding:18px 30px;border-bottom:1px solid var(--line);flex:0 0 auto}
+  .logo{width:48px;height:48px;border-radius:13px;background:linear-gradient(135deg,var(--brand),var(--brand2));display:grid;place-items:center;font-size:24px;font-weight:800}
+  .biz{font-size:21px;font-weight:800}.biz-sub{font-size:12px;color:var(--mut)}
+  main{flex:1;display:flex;overflow:hidden}
+  /* cart mirror */
+  .items{flex:1;overflow-y:auto;padding:18px 30px}
+  .row{display:flex;align-items:baseline;gap:14px;padding:13px 0;border-bottom:1px solid var(--line);font-size:21px;animation:slide .25s ease}
+  @keyframes slide{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .row .q{min-width:44px;color:var(--brand2);font-weight:800}.row .nm{flex:1}.row .pr{font-weight:700}
+  aside{width:38%;max-width:460px;border-left:1px solid var(--line);background:var(--panel);padding:28px;display:flex;flex-direction:column;justify-content:flex-end}
+  .tline{display:flex;justify-content:space-between;font-size:17px;color:var(--mut);padding:5px 0}
+  .total{display:flex;justify-content:space-between;align-items:baseline;border-top:2px solid var(--line);margin-top:12px;padding-top:16px}
+  .total .lab{font-size:21px;font-weight:700}.total .amt{font-size:50px;font-weight:900;letter-spacing:-1px}
+  .center{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;width:100%;padding:24px}
+  .welcome{font-size:44px;font-weight:900;margin-bottom:10px}.welcome-sub{font-size:19px;color:var(--mut)}
+  .thanks{font-size:60px;font-weight:900;color:var(--green)}
+  /* interactive */
+  .pay{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;padding:24px 18px;text-align:center}
+  .duebox{margin-bottom:6px;color:var(--mut);font-size:18px}
+  .due{font-size:40px;font-weight:900;margin-bottom:18px}
+  .step{font-size:26px;font-weight:800;margin-bottom:20px}
+  .tips{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;width:min(680px,94%)}
+  .tipbtn{background:var(--panel2);border:2px solid var(--line);border-radius:18px;padding:20px 8px;cursor:pointer;transition:.12s;display:flex;flex-direction:column;gap:4px}
+  .tipbtn:active{transform:scale(.97);border-color:var(--brand)}
+  .tipbtn .pct{font-size:30px;font-weight:900}.tipbtn .amt{font-size:16px;color:var(--mut)}
+  .tipbtn.alt{background:transparent}
+  .row2{display:flex;gap:14px;width:min(680px,94%);margin-top:14px}
+  .row2 .tipbtn{flex:1}
+  .bigbtn{background:linear-gradient(135deg,var(--brand),var(--brand2));border:none;color:#fff;border-radius:16px;padding:20px 30px;font-size:21px;font-weight:800;cursor:pointer;width:min(680px,94%);margin-top:10px}
+  .bigbtn:active{transform:scale(.98)}
+  .ghostbtn{background:transparent;border:1px solid var(--line);color:var(--mut);border-radius:14px;padding:14px 22px;font-size:16px;cursor:pointer;margin-top:14px}
+  .spin{width:64px;height:64px;border-radius:50%;border:6px solid var(--line);border-top-color:var(--brand);animation:rot 1s linear infinite;margin:6px 0 20px}
+  @keyframes rot{to{transform:rotate(360deg)}}
+  .check{font-size:90px;color:var(--green);line-height:1;margin-bottom:8px;animation:pop .35s ease}
+  @keyframes pop{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+  .field{width:min(520px,92%);padding:16px;border-radius:12px;background:var(--panel2);border:1px solid var(--line);color:var(--txt);font-size:18px;margin:6px 0 12px;text-align:center}
+  .foot{padding:10px 30px;border-top:1px solid var(--line);color:var(--mut);font-size:12px;display:flex;justify-content:space-between;flex:0 0 auto}
+  .dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--green);margin-right:7px;vertical-align:middle;animation:pulse 1.6s infinite}
+  @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const params=new URLSearchParams(location.search);
+const TENANT=params.get('tenant')||'default';
+const money=n=>'$'+(Math.round((Number(n)||0)*100)/100).toFixed(2);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+let business='Tavo', lastSig='', cur=null, sentTip=null, sentReceipt=null, customMode=false;
+
+async function respond(body){
+  try{ await fetch('/api/display/respond',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({tenant:TENANT,sessionId:cur&&cur.sessionId,...body})}); }catch(e){}
+}
+function chooseTip(amount){ if(sentTip===cur.sessionId) return; sentTip=cur.sessionId; cur.tip=amount; cur.phase='await_card'; respond({tip:amount}); renderInteractive(); }
+function customTip(){ customMode=true; renderInteractive(); const i=document.getElementById('ctip'); if(i) i.focus(); }
+function confirmCustom(){ const v=Number(document.getElementById('ctip').value); chooseTip(isFinite(v)&&v>0?v:0); }
+function chooseReceipt(kind){
+  if(sentReceipt===cur.sessionId) return;
+  if((kind==='email'||kind==='sms')){
+    const c=document.getElementById('rcontact'); const val=c?c.value.trim():'';
+    if(!val){ if(c){c.style.borderColor='#f87171';c.focus();} return; }
+    sentReceipt=cur.sessionId; respond({receipt:kind,contact:val});
+  } else { sentReceipt=cur.sessionId; respond({receipt:kind}); }
+  paint();
+}
+
+function head(){ const logo=(business||'T').trim().charAt(0).toUpperCase();
+  return `<header><div class="logo">${logo}</div><div><div class="biz">${esc(business)}</div><div class="biz-sub">Customer display</div></div></header>`; }
+function foot(){ return `<div class="foot"><span><span class="dot"></span>Live</span><span>Powered by Tavo</span></div>`; }
+
+function renderCart(s){
+  const rows=s.lines.map(l=>`<div class="row"><div class="q">${l.qty}×</div><div class="nm">${esc(l.name)}</div><div class="pr">${money(l.price*l.qty)}</div></div>`).join('');
+  return `<main><div class="items">${rows}</div>
+    <aside><div class="tline"><span>Subtotal</span><span>${money(s.subtotal)}</span></div>
+    <div class="tline"><span>Tax</span><span>${money(s.tax)}</span></div>
+    <div class="total"><span class="lab">Total</span><span class="amt">${money(s.total)}</span></div></aside></main>`;
+}
+
+function renderInteractive(){
+  const c=cur, sub=c.subtotal||0, base=c.baseTotal||0;
+  let body='';
+  if(c.phase==='tip'){
+    if(customMode){
+      body=`<div class="pay"><div class="duebox">Amount due</div><div class="due">${money(base)}</div>
+        <div class="step">Enter a tip</div>
+        <input id="ctip" class="field" type="number" inputmode="decimal" step="0.50" min="0" placeholder="0.00">
+        <button class="bigbtn" onclick="confirmCustom()">Add tip &amp; continue</button>
+        <button class="ghostbtn" onclick="customMode=false;renderInteractive()">Back</button></div>`;
+    } else {
+      const tiles=(c.tipPresets||[]).map(p=>{const amt=Math.round(sub*p*100)/100;
+        return `<button class="tipbtn" onclick="chooseTip(${amt})"><span class="pct">${Math.round(p*100)}%</span><span class="amt">${money(amt)}</span></button>`;}).join('');
+      body=`<div class="pay"><div class="duebox">Amount due</div><div class="due">${money(base)}</div>
+        <div class="step">Add a tip?</div>
+        <div class="tips">${tiles}</div>
+        <div class="row2"><button class="tipbtn alt" onclick="customTip()"><span class="pct" style="font-size:20px">Custom</span></button>
+          <button class="tipbtn alt" onclick="chooseTip(0)"><span class="pct" style="font-size:20px">No tip</span></button></div></div>`;
+    }
+  } else if(c.phase==='await_card'){
+    const total=base+(c.tip||0);
+    body=`<div class="pay"><div class="spin"></div>
+      <div class="step">Present your card</div>
+      <div class="welcome-sub">Tap, insert, or swipe to pay ${money(total)}${c.tip?` &nbsp;·&nbsp; ${money(c.tip)} tip`:''}</div></div>`;
+  } else if(c.phase==='declined'){
+    body=`<div class="pay"><div class="check" style="color:#f87171">✕</div><div class="step">Payment declined</div>
+      <div class="welcome-sub">Please try another card or ask our team.</div></div>`;
+  } else if(c.phase==='approved'){
+    const total=base+(c.tip||0);
+    if(sentReceipt===c.sessionId || c.receipt){
+      body=`<div class="pay"><div class="check">✓</div><div class="step">All set!</div>
+        <div class="welcome-sub">${c.receipt==='none'?'Thanks &#8212; have a great day':'Your receipt is on its way'}</div></div>`;
+    } else {
+      body=`<div class="pay"><div class="check">✓</div><div class="step">Approved &#8212; ${money(total)}</div>
+        <div class="welcome-sub" style="margin-bottom:18px">How would you like your receipt?</div>
+        <input id="rcontact" class="field" placeholder="email or phone (for email/text)">
+        <div class="tips" style="grid-template-columns:repeat(2,1fr);width:min(560px,94%)">
+          <button class="tipbtn alt" onclick="chooseReceipt('email')"><span class="pct" style="font-size:20px">✉️ Email</span></button>
+          <button class="tipbtn alt" onclick="chooseReceipt('sms')"><span class="pct" style="font-size:20px">💬 Text</span></button>
+          <button class="tipbtn alt" onclick="chooseReceipt('print')"><span class="pct" style="font-size:20px">🖨 Print</span></button>
+          <button class="tipbtn alt" onclick="chooseReceipt('none')"><span class="pct" style="font-size:20px">No thanks</span></button></div></div>`;
+    }
+  } else { // done
+    body=`<div class="pay"><div class="check">✓</div><div class="thanks">Thank you!</div>
+      <div class="welcome-sub" style="margin-top:10px">Have a wonderful day</div></div>`;
+  }
+  document.getElementById('app').innerHTML=head()+`<main style="display:block">${body}</main>`+foot();
+}
+
+function paint(){
+  const s=cur&&cur.__mirror||{};
+  if(cur && ['tip','await_card','approved','declined','done'].includes(cur.phase)){ renderInteractive(); return; }
+  // passive states
+  const has=(s.lines||[]).length>0, thanks=!has && s.message;
+  let body;
+  if(thanks){ body=`<div class="center"><div class="thanks">✓ ${esc(s.message)}</div><div class="welcome-sub" style="margin-top:16px">Have a wonderful day</div></div>`; }
+  else if(!has){ body=`<div class="center"><div class="welcome">Welcome 👋</div><div class="welcome-sub">Your order will appear here</div></div>`; }
+  else { document.getElementById('app').innerHTML=head()+renderCart(s)+foot(); return; }
+  document.getElementById('app').innerHTML=head()+`<main style="display:block">${body}</main>`+foot();
+}
+
+async function poll(){
+  try{
+    const r=await fetch('/api/display?tenant='+encodeURIComponent(TENANT),{cache:'no-store'});
+    if(!r.ok) return; const s=await r.json(); business=s.business||business;
+    const co=s.checkout;
+    if(co){ co.__mirror=s; const changed=JSON.stringify([co.phase,co.tip,co.receipt,co.sessionId])!==lastSig;
+      if(co.sessionId!==(cur&&cur.sessionId)){ sentTip=null; sentReceipt=null; customMode=false; }
+      cur=co; if(changed){ lastSig=JSON.stringify([co.phase,co.tip,co.receipt,co.sessionId]); customMode=false; paint(); }
+    } else {
+      const sig=JSON.stringify([s.lines,s.total,s.message,'cart']);
+      if(sig!==lastSig){ lastSig=sig; cur={__mirror:s,phase:'cart'}; paint(); }
+    }
+  }catch(e){}
+}
+cur={__mirror:{lines:[]},phase:'cart'}; paint();
+poll(); setInterval(poll,1200);
+</script>
+</body>
+</html>
