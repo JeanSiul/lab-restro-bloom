@@ -1,0 +1,29 @@
+name: Adapt POS lab for Vercel
+
+on:
+  push:
+    paths:
+      - '.github/scripts/adapt_vercel_lab.py'
+      - '.github/workflows/adapt-vercel-lab.yml'
+
+jobs:
+  adapt:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Apply Vercel adaptation
+        run: python3 .github/scripts/adapt_vercel_lab.py
+      - name: Sanity check
+        run: node --check api/index.js && node --check src/server.js
+      - name: Commit adaptation
+        run: |
+          git config user.name 'JeanSiul'
+          git config user.email 'siul.altamirano@gmail.com'
+          git add src/server.js api/index.js vercel.json
+          git diff --cached --quiet && exit 0
+          git commit -m 'fix: adapt POS lab for Vercel serverless runtime'
+          git push origin HEAD:main
