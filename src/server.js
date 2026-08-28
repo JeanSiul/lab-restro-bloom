@@ -1756,36 +1756,42 @@ app.get('/api/tips/pool', requireAuth, requireRole('manager'), h(async (req, res
 // ---- staff ----
 app.get('/api/staff', requireAuth, requireRole('manager'), h(async (req, res) => res.json(await store.listStaff(tid(req)))));
 
-async function start() {
-  // Refuse to boot in production without a strong, non-default JWT secret —
-  // a weak secret would let anyone forge staff/manager sessions.
-  const jwt = process.env.JWT_SECRET || '';
-  if (PROD && (jwt.length < 24 || jwt === 'dev-only-change-me')) {
-    console.error('FATAL: set a strong JWT_SECRET (>=24 chars) before running in production.');
-    process.exit(1);
-  }
-  if (!PROD && jwt.length < 24) console.warn('[security] JWT_SECRET is weak/unset — fine for dev, REQUIRED in production.');
-  store = await getStore();             // getStore() runs schema migration in init()
-  // Auto-seed a brand-new (empty) database so fresh deploys work out of the box.
-  // Existing data is never touched. Disable with AUTO_SEED=false.
-  if (process.env.AUTO_SEED !== 'false') {
-    const users = await store.listUsers();
-    if (users.length === 0) {
-      await store.reset(buildSeedData());
-      console.log('  Empty database detected → seeded default menu, tables, and users.');
+let initPromise = null;
+
+export function ensureInitialized() {
+  if (initPromise) return initPromise;
+  initPromise = (async () => {
+    const jwt = process.env.JWT_SECRET || '';
+    if (PROD && (jwt.length < 24 || jwt === 'dev-only-change-me')) {
+      throw new Error('JWT_SECRET must be set to a strong secret (>=24 chars) in production.');
     }
-  }
-  // Self-heal: ensure the 'default' tenant has a real row (databases created
-  // before multi-tenancy stored data under tenant_id='default' but had no tenants row).
-  try {
-    if (!(await store.getTenant(DEFAULT_TENANT))) {
-      await store.createTenant({ id: DEFAULT_TENANT, name: 'Tavo', slug: DEFAULT_TENANT, plan: 'free', mode: 'restaurant', createdAt: Date.now() });
-      console.log('  Backfilled the default tenant row.');
+    if (!PROD && jwt.length < 24) console.warn('[security] JWT_SECRET is weak/unset — fine for dev, REQUIRED in production.');
+    store = await getStore();
+    if (process.env.AUTO_SEED !== 'false') {
+      const users = await store.listUsers();
+      if (users.length === 0) {
+        await store.reset(buildSeedData());
+        console.log('  Empty database detected → seeded default menu, tables, and users.');
+      }
     }
-  } catch (e) { console.error('default-tenant backfill skipped:', e.message); }
-  app.listen(PORT, () => {
-    console.log(`\n  Tavo POS running → http://localhost:${PORT}`);
-    console.log(`  Database: ${storeKind().toUpperCase()}   Payment mode: ${usingStripe ? 'STRIPE (test)' : 'MOCK (no key set)'}\n`);
-  });
+    try {
+      if (!(await store.getTenant(DEFAULT_TENANT))) {
+        await store.createTenant({ id: DEFAULT_TENANT, name: 'Tavo', slug: DEFAULT_TENANT, plan: 'free', mode: 'restaurant', createdAt: Date.now() });
+        console.log('  Backfilled the default tenant row.');
+      }
+    } catch (e) { console.error('default-tenant backfill skipped:', e.message); }
+    return store;
+  })();
+  return initPromise;
 }
-start().catch(e => { console.error('Failed to start:', e); process.exit(1); });
+
+if (!process.env.VERCEL) {
+  ensureInitialized()
+    .then(() => app.listen(PORT, () => {
+      console.log(`\n  Tavo POS running → http://localhost:${PORT}`);
+      console.log(`  Database: ${storeKind().toUpperCase()}   Payment mode: ${usingStripe ? 'STRIPE (test)' : 'MOCK (no key set)'}\n`);
+    }))
+    .catch(e => { console.error('Failed to start:', e); process.exit(1); });
+}
+
+export default app;
