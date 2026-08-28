@@ -1,0 +1,33 @@
+name: Import Tavo POS lab
+
+on:
+  push:
+    paths:
+      - '.github/workflows/import-tavo.yml'
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Import upstream source
+        run: |
+          git clone --depth 1 https://github.com/sanjayubhrani-lab/tavo-pos.git /tmp/upstream
+          rsync -a --delete --exclude '.git' --exclude '.github/workflows/import-tavo.yml' /tmp/upstream/ ./
+          mkdir -p .github/workflows
+          git checkout HEAD -- .github/workflows/import-tavo.yml
+      - name: Preserve attribution
+        run: |
+          printf '%s\n' '# Laboratory source' '' 'Upstream: https://github.com/sanjayubhrani-lab/tavo-pos' 'License: GNU AGPL v3 (see LICENSE).' '' 'This repository is used only as a technical evaluation lab for restaurant POS/KDS workflows.' > LAB_SOURCE.md
+      - name: Commit imported source
+        run: |
+          git config user.name 'JeanSiul'
+          git config user.email 'siul.altamirano@gmail.com'
+          git add -A
+          git diff --cached --quiet && exit 0
+          git commit -m 'chore: import Tavo POS evaluation lab'
+          git push origin HEAD:main
