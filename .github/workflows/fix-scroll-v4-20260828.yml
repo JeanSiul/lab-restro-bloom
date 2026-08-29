@@ -1,0 +1,31 @@
+name: Fix POS lab scrolling v4
+
+on:
+  push:
+    paths:
+      - '.github/scripts/fix_scroll_v4.py'
+      - '.github/workflows/fix-scroll-v4-20260828.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Apply deterministic scroll fix
+        run: python .github/scripts/fix_scroll_v4.py
+      - name: Verify
+        run: |
+          grep -F "height:0;overflow-x:auto;overflow-y:scroll" public/index.html
+          grep -F "enforceScrollableView" public/index.html
+      - name: Commit
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public/index.html
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "fix: force reliable viewport scrolling"
+          git push
