@@ -1,0 +1,61 @@
+name: Import restaurant-manager benchmark
+
+on:
+  push:
+    paths:
+      - '.github/workflows/import-restaurant-manager.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Import benchmark source
+        shell: bash
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp -d)"
+          git clone --depth 1 https://github.com/siddik-web/restaurant-manager.git "$tmp/src"
+
+          find . -mindepth 1 -maxdepth 1 ! -name .git ! -name .github -exec rm -rf {} +
+          cp -a "$tmp/src/." .
+          rm -rf .git
+
+          cat > vercel.json <<'EOF'
+          {
+            "cleanUrls": true,
+            "trailingSlash": false
+          }
+          EOF
+
+          cat > BENCHMARK_SOURCE.md <<'EOF'
+          # Benchmark source
+
+          This evaluation copy was imported from:
+          https://github.com/siddik-web/restaurant-manager
+
+          The upstream README states that the project is licensed under the MIT License.
+          This repository is used only as an evaluation lab to study restaurant POS UX and workflows.
+          The previous Tavo POS benchmark is preserved in branch `benchmark/tavo-pos-20260828`.
+          EOF
+
+      - name: Commit imported benchmark
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes"
+            exit 0
+          fi
+          git commit -m "chore: switch lab to restaurant-manager benchmark"
+          git push origin HEAD:main
