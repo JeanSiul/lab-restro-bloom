@@ -1,14 +1,4 @@
 {
-  "version": 2,
-  "functions": {
-    "api/index.js": {
-      "maxDuration": 60
-    }
-  },
-  "rewrites": [
-    { "source": "/api/:path*", "destination": "/api/index.js" },
-    { "source": "/", "destination": "/public/index.html" },
-    { "source": "/display.html", "destination": "/public/display.html" },
-    { "source": "/order.html", "destination": "/public/order.html" }
-  ]
+  "cleanUrls": true,
+  "trailingSlash": false
 }
